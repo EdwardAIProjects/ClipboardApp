@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Clipboard</string>
+    <string name="clipboard_label">Shared content</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="idle_title">Share to Clipboard</string>
+    <string name="idle_description">Share text, links, or files to this app and they will be copied to your clipboard immediately.</string>
 </resources>
