@@ -3,6 +3,7 @@ name: Build APK
 on:
   push:
     branches: [main, master]
+    tags: ["v*"]
   pull_request:
     branches: [main, master]
   workflow_dispatch:
@@ -48,3 +49,37 @@ jobs:
           name: clipboard-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+  publish-latest:
+    name: Publish latest debug APK
+    runs-on: ubuntu-24.04
+    needs: build
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: write
+    concurrency:
+      group: latest-debug-apk-release
+      cancel-in-progress: false
+
+    steps:
+      - name: Download debug APK
+        uses: actions/download-artifact@v8
+        with:
+          name: clipboard-debug-apk
+          path: dist
+
+      - name: Rename APK
+        run: mv dist/app-debug.apk dist/clipboard-debug-latest.apk
+
+      - name: Publish latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
+          gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/latest" || true
+          gh release create latest dist/clipboard-debug-latest.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Latest Debug Build" \
+            --notes "Installable debug APK for $GITHUB_SHA." \
+            --latest
